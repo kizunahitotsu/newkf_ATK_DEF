@@ -1,0 +1,31 @@
+<Aura_value>
+
+<Role> <Card>
+<Wish>
+<Amulet>
+1 1 1 1 1 1
+NONE
+NONE
+NONE
+NONE
+0
+
+NPC
+ENDNPC
+
+PC
+<Enemy>
+ENDPC
+
+GEAR
+<Gear>
+ENDGEAR
+
+THREADS <Threads>
+TESTS <Tests>
+REDUCERATE 3 10
+PCWEIGHT 1 1
+SEEDMAX <Seedmax>
+AURAFILTER <Aura_filter>
+DEFENDER <Defender>
+VERBOSE <Verbose>
