@@ -7,6 +7,7 @@ WEI
 YI
 MING
 MIN
+WU
 [Gear]
 SWORD
 BOW
