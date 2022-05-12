@@ -8,6 +8,7 @@ YI
 MING
 MIN
 WU
+XI
 [Gear]
 SWORD
 BOW
