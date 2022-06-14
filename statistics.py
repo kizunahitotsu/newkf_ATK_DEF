@@ -3,7 +3,12 @@ import re
 import time
 from openpyxl import Workbook
 
-#import iterate会出BUG，日后解决
+pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d\n'
+pattern_pc+=r'(WISH \d \d \d \d \d \d \d\n)?'
+pattern_pc+=r'(AMULET ([A-Z]+ \d+ )+ENDAMULET\n)?'
+pattern_pc+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
+pattern_pc+=r'([A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
+pattern_pc+=r'\d( [A-Z]+)*'
 
 class GEAR:
     def __init__(self,string):
@@ -28,28 +33,33 @@ class GEAR:
 
 class PC:
     def __init__(self,string):
-        pattern=r'('+r'([A-Z]+)_((.+?)\|(.+?)\|turn(\d+)) (\d+ \d \d)\n'
-        pattern+=r'(?:WISH (\d \d \d \d \d \d \d)\n)?'
-        pattern+=r'(?:AMULET ((?:[A-Z]+ \d+ )+)ENDAMULET\n)?'
-        pattern+=r'(\d+ \d+ \d+ \d+ \d+ \d+) ?\n'
-        pattern+=r'([A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
-        pattern+=r'(\d(?: [A-Z]+)*)'+r')'
-        match=re.search(pattern,string).groups()
-        self.string=match[0]
-        self.role=match[1]
-        self.name=match[2]
-        self.group=match[3]
-        self.mode=match[4]
-        self.turn=match[5]
-        self.card=match[6]
-        self.wish=match[7]
-        self.amulet=match[8]
-        self.attribute=match[9]
-        self.weapon=GEAR(match[10])
-        self.hand=GEAR(match[11])
-        self.body=GEAR(match[12])
-        self.head=GEAR(match[13])
-        self.aura=match[14]        
+        pattern=r'(?P<string>'
+        pattern+=r'(?P<role>[A-Z]+)_(?P<name>(?P<group>.+?)\|(?P<mode>.+?)\|turn(?P<turn>\d+)) (?P<growth>G=\d+ )?(?P<card>\d+ \d \d)\n'
+        pattern+=r'(?:WISH (?P<wish>\d \d \d \d \d \d \d)\n)?'
+        pattern+=r'(?:AMULET (?P<amulet>(?:[A-Z]+ \d+ )+)ENDAMULET\n)?'
+        pattern+=r'(?P<attribute>\d+ \d+ \d+ \d+ \d+ \d+) ?\n'
+        pattern+=r'(?P<weapon>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
+        pattern+=r'(?P<hand>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
+        pattern+=r'(?P<body>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
+        pattern+=r'(?P<head>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
+        pattern+=r'(?P<aura>\d(?: [A-Z]+)*)'+r')'
+        match=re.search(pattern,string)
+        self.string=match['string']
+        self.role=match['role']
+        self.name=match['name']
+        self.group=match['group']
+        self.mode=match['mode']
+        self.turn=match['turn']
+        self.growth=match['growth']
+        self.card=match['card']
+        self.wish=match['wish']
+        self.amulet=match['amulet']
+        self.attribute=match['attribute']
+        self.weapon=GEAR(match['weapon'])
+        self.hand=GEAR(match['hand'])
+        self.body=GEAR(match['body'])
+        self.head=GEAR(match['head'])
+        self.aura=match['aura']        
 
     def __str__(self):
         return self.string
@@ -108,17 +118,11 @@ def read_pools():
         else:
             print(f'{dir_name}\\turn{end}.txt 不存在，请重新输入！')
 
-    pattern=r'[A-Z]+_.+?\|.+?\|turn\d+ \d+ \d \d\n'
-    pattern+=r'(WISH \d \d \d \d \d \d \d\n)?'
-    pattern+=r'(AMULET ([A-Z]+ \d+ )+ENDAMULET\n)?'
-    pattern+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
-    pattern+=r'([A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
-    pattern+=r'\d( [A-Z]+)*'
     dt={}
     
     for turn in range(start,end+1):
         with open(f'{dir_name}\\turn{turn}.txt',mode='r',encoding='UTF-8') as f:
-            pool_all=map(lambda s:PC(s.group()),re.finditer(pattern,f.read()))
+            pool_all=map(lambda s:PC(s.group()),re.finditer(pattern_pc,f.read()))
             for pc in pool_all:
                 if pc in dt:
                     dt[pc]+=1

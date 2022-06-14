@@ -2,6 +2,13 @@ import os
 import re
 import time
 
+pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d\n'
+pattern_pc+=r'(WISH \d \d \d \d \d \d \d\n)?'
+pattern_pc+=r'(AMULET ([A-Z]+ \d+ )+ENDAMULET\n)?'
+pattern_pc+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
+pattern_pc+=r'([A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
+pattern_pc+=r'\d( [A-Z]+)*'
+
 class GEAR:
     def __init__(self,string):
         pattern=r'(([A-Z]+) (\d+ \d+ \d+ \d+ \d+) (\d)|NONE)'
@@ -26,28 +33,33 @@ class GEAR:
 
 class PC:
     def __init__(self,string):
-        pattern=r'('+r'([A-Z]+)_((.+?)\|(.+?)\|turn(\d+)) (\d+ \d \d)\n'
-        pattern+=r'(?:WISH (\d \d \d \d \d \d \d)\n)?'
-        pattern+=r'(?:AMULET ((?:[A-Z]+ \d+ )+)ENDAMULET\n)?'
-        pattern+=r'(\d+ \d+ \d+ \d+ \d+ \d+) ?\n'
-        pattern+=r'([A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
-        pattern+=r'(\d(?: [A-Z]+)*)'+r')'
-        match=re.search(pattern,string).groups()
-        self.string=match[0]
-        self.role=match[1]
-        self.name=match[2]
-        self.group=match[3]
-        self.mode=match[4]
-        self.turn=match[5]
-        self.card=match[6]
-        self.wish=match[7]
-        self.amulet=match[8]
-        self.attribute=match[9]
-        self.weapon=GEAR(match[10])
-        self.hand=GEAR(match[11])
-        self.body=GEAR(match[12])
-        self.head=GEAR(match[13])
-        self.aura=match[14]        
+        pattern=r'(?P<string>'
+        pattern+=r'(?P<role>[A-Z]+)_(?P<name>(?P<group>.+?)\|(?P<mode>.+?)\|turn(?P<turn>\d+)) (?P<growth>G=\d+ )?(?P<card>\d+ \d \d)\n'
+        pattern+=r'(?:WISH (?P<wish>\d \d \d \d \d \d \d)\n)?'
+        pattern+=r'(?:AMULET (?P<amulet>(?:[A-Z]+ \d+ )+)ENDAMULET\n)?'
+        pattern+=r'(?P<attribute>\d+ \d+ \d+ \d+ \d+ \d+) ?\n'
+        pattern+=r'(?P<weapon>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
+        pattern+=r'(?P<hand>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
+        pattern+=r'(?P<body>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
+        pattern+=r'(?P<head>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
+        pattern+=r'(?P<aura>\d(?: [A-Z]+)*)'+r')'
+        match=re.search(pattern,string)
+        self.string=match['string']
+        self.role=match['role']
+        self.name=match['name']
+        self.group=match['group']
+        self.mode=match['mode']
+        self.turn=match['turn']
+        self.growth=match['growth']
+        self.card=match['card']
+        self.wish=match['wish']
+        self.amulet=match['amulet']
+        self.attribute=match['attribute']
+        self.weapon=GEAR(match['weapon'])
+        self.hand=GEAR(match['hand'])
+        self.body=GEAR(match['body'])
+        self.head=GEAR(match['head'])
+        self.aura=match['aura']        
 
     def __str__(self):
         return self.string
@@ -135,14 +147,8 @@ def read_pool():
     '''读取算点对手PC，返回字典，分别由总池子、ATK池子、DEF池子、MIX池子的列表构成'''
     initialize(tuple(group for group in read_option()['Group']))
     
-    pattern=r'('+r'[A-Z]+_.+?\|.+?\|turn\d+ \d+ \d \d\n'
-    pattern+=r'(WISH \d \d \d \d \d \d \d\n)?'
-    pattern+=r'(AMULET ([A-Z]+ \d+ )+ENDAMULET\n)?'
-    pattern+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
-    pattern+=r'([A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
-    pattern+=r'\d( [A-Z]+)*'+r')'
     with open(f'记录\\turn{get_turn()}.txt',mode='r',encoding='UTF-8') as f:
-        pool_all=list(map(lambda s:PC(s.group()),re.finditer(pattern,f.read())))
+        pool_all=list(map(lambda s:PC(s.group()),re.finditer(pattern_pc,f.read())))
     
     dt={'ALL':pool_all}
     for m in ('ATK','DEF','MIX'):
@@ -161,6 +167,12 @@ def write_newkf_apc(group,role):
     
     sample=sample.replace('<Aura_value>',group['Aura value'],1)
     sample=sample.replace('<Role>',role,1)
+
+    if role in read_lib()['Growth'] and group['Growth']:
+        sample=sample.replace('<Growth>','G='+group['Growth'],1)
+    else:
+        sample=sample.replace('<Growth> ','',1)
+
     sample=sample.replace('<Card>',group['Card'],1)
 
     if group['Wish']:
@@ -214,14 +226,7 @@ def read_rezult_apc():
     with open('代码\\output.txt',mode='r',encoding='UTF-8') as f:
         output=f.read()
 
-    pattern=r'[A-Z]+(_.+?\|.+?\|turn\d+)? \d+ \d \d\n'
-    pattern+=r'(WISH \d \d \d \d \d \d \d\n)?'
-    pattern+=r'(AMULET ([A-Z]+ \d+ )+ENDAMULET\n)?'
-    pattern+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
-    pattern+=r'([A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
-    pattern+=r'\d( [A-Z]+)*'
-    match=re.search(pattern,output)
-    pc_string=match.group()
+    pc_string=re.search(pattern_pc,output).group()
     
     win_rate=float(re.search('Average Win Rate : ([\d\.]+)%',output).group(1))
     return pc_string,win_rate
@@ -234,7 +239,12 @@ def apc(group,role):
     write_newkf_apc(group,role)
     calculate()
 
-    return read_rezult_apc()
+    #若为有成长值的角色，则加上成长值
+    rezult=read_rezult_apc()
+    if role in read_lib()['Growth'] and group['Growth']:
+        return rezult[0].replace(' ',' G='+group['Growth']+' ',1),rezult[1]
+    else:
+        return rezult
 
 def write_newkf_vb(pool_all):
     '''将PC池子写入newkf.in'''
@@ -242,7 +252,7 @@ def write_newkf_vb(pool_all):
         sample=f.read()
     
     sample=sample.replace('<Aura_value>','0',1)
-    sample=sample.replace('<Role> <Card>\n<Wish>\n<Amulet>','LIN 700 4 8',1)
+    sample=sample.replace('<Role> <Growth> <Card>\n<Wish>\n<Amulet>','LIN 700 4 8',1)
     sample=sample.replace('<Enemy>','\n\n'.join(map(lambda pc:pc.string,pool_all)),1)
     sample=sample.replace('<Gear>\n','',1)
     sample=sample.replace('<Threads>',read_option()['Calculation']['Threads'],1)
@@ -291,13 +301,7 @@ def iterate_group(group):
     results=[apc(group,role) for role in read_lib()['Role']]
     results.sort(key=lambda t:-t[1])
     pc_string=results[0][0]
-    pattern=r'[A-Z]+(_.+?\|.+?\|turn\d+)? \d+ \d \d\n'
-    pattern+=r'(?:WISH \d \d \d \d \d \d \d\n)?'
-    pattern+=r'(?:AMULET (?:[A-Z]+ \d+ )+ENDAMULET\n)?'
-    pattern+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
-    pattern+=r'(?:[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
-    pattern+=r'\d(?: [A-Z]+)*'
-    match=re.search(pattern,pc_string).group()
+    match=re.search(pattern_pc,pc_string).group()
     
     return PC(match.replace(' ',f'_{group["Name"]}|{mode(group["Defender"])}|turn{get_turn()+1} ',1))
 
@@ -328,9 +332,9 @@ def main():
         print(f'已完成第 {get_turn()} 轮迭代，用时 {end_time-start_time} s！')
 
 try:
-    start_time_total=time.time()
+    start_time=time.time()
     main()
-    end_time_total=time.time()
+    end_time=time.time()
     print(f'Use time: {end_time-start_time} s')
 except Exception as e:
     print(e)
