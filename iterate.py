@@ -1,7 +1,6 @@
 import os
 import re
 import time
-import PySimpleGUI as sg
 
 pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d\n'
 pattern_pc+=r'(WISH \d \d \d \d \d \d \d\n)?'
@@ -338,4 +337,4 @@ try:
     print(f'Use time: {end_time-start_time} s')
 except Exception as e:
     print(e)
-    #input()
+    input()
