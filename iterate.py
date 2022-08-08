@@ -2,7 +2,7 @@ import os
 import re
 import time
 
-pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d\n'
+pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d+\n'
 pattern_pc+=r'(WISH \d \d \d \d \d \d \d\n)?'
 pattern_pc+=r'(AMULET ([A-Z]+ \d+ )+ENDAMULET\n)?'
 pattern_pc+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
@@ -34,7 +34,7 @@ class GEAR:
 class PC:
     def __init__(self,string):
         pattern=r'(?P<string>'
-        pattern+=r'(?P<role>[A-Z]+)_(?P<name>(?P<group>.+?)\|(?P<mode>.+?)\|turn(?P<turn>\d+)) (?P<growth>G=\d+ )?(?P<card>\d+ \d \d)\n'
+        pattern+=r'(?P<role>[A-Z]+)_(?P<name>(?P<group>.+?)\|(?P<mode>.+?)\|turn(?P<turn>\d+)) (?P<growth>G=\d+ )?(?P<card>\d+ \d \d+)\n'
         pattern+=r'(?:WISH (?P<wish>\d \d \d \d \d \d \d)\n)?'
         pattern+=r'(?:AMULET (?P<amulet>(?:[A-Z]+ \d+ )+)ENDAMULET\n)?'
         pattern+=r'(?P<attribute>\d+ \d+ \d+ \d+ \d+ \d+) ?\n'
@@ -135,7 +135,7 @@ def initialize(groups):
         with open('记录\\turn0.txt',mode='w+',encoding='UTF-8') as f:
             for group in groups:
                 f.write(f'MIN_{group["Name"]}|{mode(group["Defender"])}|turn0 {group["Card"]}\n')
-                f.write(f'{int(int(group["Card"].split()[0])/2) }'*6+'\n')
+                f.write(f'{int(int(group["Card"].split()[0])/2)} '*6+'\n')
                 f.write(f'SHIELD {group["Gear"]}\n')
                 f.write(f'GLOVES {group["Gear"]}\n')
                 f.write(f'THORN {group["Gear"]}\n')
@@ -335,6 +335,7 @@ try:
     main()
     end_time=time.time()
     print(f'Use time: {end_time-start_time} s')
+    input()
 except Exception as e:
     print(e)
     input()
