@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import PySimpleGUI as sg
 
 pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d\n'
 pattern_pc+=r'(WISH \d \d \d \d \d \d \d\n)?'
@@ -135,9 +136,12 @@ def initialize(groups):
         with open('记录\\turn0.txt',mode='w+',encoding='UTF-8') as f:
             for group in groups:
                 f.write(f'MIN_{group["Name"]}|{mode(group["Defender"])}|turn0 {group["Card"]}\n')
-                f.write('1 1 1 1 1 1\n')
-                f.write('NONE\n'*4)
-                f.write('0\n\n')
+                f.write(f'{int(int(group["Card"].split()[0])/2) }'*6+'\n')
+                f.write(f'SHIELD {group["Gear"]}\n')
+                f.write(f'GLOVES {group["Gear"]}\n')
+                f.write(f'THORN {group["Gear"]}\n')
+                f.write(f'TIARA {group["Gear"]}\n')
+                f.write('4 SHENG SHANG CI JUE\n\n')
 
 def get_turn():
     '''返回当前轮数'''
@@ -239,12 +243,8 @@ def apc(group,role):
     write_newkf_apc(group,role)
     calculate()
 
-    #若为有成长值的角色，则加上成长值
     rezult=read_rezult_apc()
-    if role in read_lib()['Growth'] and group['Growth']:
-        return rezult[0].replace(' ',' G='+group['Growth']+' ',1),rezult[1]
-    else:
-        return rezult
+    return rezult
 
 def write_newkf_vb(pool_all):
     '''将PC池子写入newkf.in'''
@@ -338,4 +338,4 @@ try:
     print(f'Use time: {end_time-start_time} s')
 except Exception as e:
     print(e)
-    input()
+    #input()
