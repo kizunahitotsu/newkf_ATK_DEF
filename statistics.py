@@ -3,7 +3,7 @@ import re
 import time
 from openpyxl import Workbook
 
-pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d\n'
+pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d+\n'
 pattern_pc+=r'(WISH \d \d \d \d \d \d \d\n)?'
 pattern_pc+=r'(AMULET ([A-Z]+ \d+ )+ENDAMULET\n)?'
 pattern_pc+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
@@ -34,7 +34,7 @@ class GEAR:
 class PC:
     def __init__(self,string):
         pattern=r'(?P<string>'
-        pattern+=r'(?P<role>[A-Z]+)_(?P<name>(?P<group>.+?)\|(?P<mode>.+?)\|turn(?P<turn>\d+)) (?P<growth>G=\d+ )?(?P<card>\d+ \d \d)\n'
+        pattern+=r'(?P<role>[A-Z]+)_(?P<name>(?P<group>.+?)\|(?P<mode>.+?)\|turn(?P<turn>\d+)) (?P<growth>G=\d+ )?(?P<card>\d+ \d \d+)\n'
         pattern+=r'(?:WISH (?P<wish>\d \d \d \d \d \d \d)\n)?'
         pattern+=r'(?:AMULET (?P<amulet>(?:[A-Z]+ \d+ )+)ENDAMULET\n)?'
         pattern+=r'(?P<attribute>\d+ \d+ \d+ \d+ \d+ \d+) ?\n'
