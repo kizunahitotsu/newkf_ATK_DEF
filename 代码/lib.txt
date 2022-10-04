@@ -74,6 +74,7 @@ REN
 RE
 DIAN
 WU
+ZHI
 FEI
 BO
 JU
