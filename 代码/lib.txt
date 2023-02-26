@@ -9,9 +9,11 @@ MING
 MIN
 WU
 XI
+XIA
 [Growth]
 WU
 XI
+XIA
 [Gear]
 SWORD
 BOW
