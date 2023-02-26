@@ -2,8 +2,8 @@ import os
 import re
 import time
 
-pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d \d+\n'
-pattern_pc+=r'(WISH \d \d \d \d \d \d \d\n)?'
+pattern_pc=r'[A-Z]+(_.+?\|.+?\|turn\d+)? (G=\d+ )?\d+ \d+ \d \d+\n'
+pattern_pc+=r'(WISH \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+\n)?'
 pattern_pc+=r'(AMULET ([A-Z]+ \d+ )+ENDAMULET\n)?'
 pattern_pc+=r'\d+ \d+ \d+ \d+ \d+ \d+ ?\n'
 pattern_pc+=r'([A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'*4
@@ -34,8 +34,8 @@ class GEAR:
 class PC:
     def __init__(self,string):
         pattern=r'(?P<string>'
-        pattern+=r'(?P<role>[A-Z]+)_(?P<name>(?P<group>.+?)\|(?P<mode>.+?)\|turn(?P<turn>\d+)) (?P<growth>G=\d+ )?(?P<card>\d+ \d \d+)\n'
-        pattern+=r'(?:WISH (?P<wish>\d \d \d \d \d \d \d)\n)?'
+        pattern+=r'(?P<role>[A-Z]+)_(?P<name>(?P<group>.+?)\|(?P<mode>.+?)\|turn(?P<turn>\d+)) (?P<growth>G=\d+ )?(?P<card>\d+ \d+ \d \d+)\n'
+        pattern+=r'(?:WISH (?P<wish>\d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+)\n)?'
         pattern+=r'(?:AMULET (?P<amulet>(?:[A-Z]+ \d+ )+)ENDAMULET\n)?'
         pattern+=r'(?P<attribute>\d+ \d+ \d+ \d+ \d+ \d+) ?\n'
         pattern+=r'(?P<weapon>[A-Z]+ \d+ \d+ \d+ \d+ \d+ \d|NONE)\n'
@@ -251,7 +251,7 @@ def write_newkf_vb(pool_all):
         sample=f.read()
     
     sample=sample.replace('<Aura_value>','0',1)
-    sample=sample.replace('<Role> <Growth> <Card>\n<Wish>\n<Amulet>','LIN 700 4 8',1)
+    sample=sample.replace('<Role> <Growth> <Card>\n<Wish>\n<Amulet>','LIN 700 500 4 8',1)
     sample=sample.replace('<Enemy>','\n\n'.join(map(lambda pc:pc.string,pool_all)),1)
     sample=sample.replace('<Gear>\n','',1)
     sample=sample.replace('<Threads>',read_option()['Calculation']['Threads'],1)
@@ -269,7 +269,8 @@ def read_rezult_vb():
     with open('代码\\output.txt',mode='r',encoding='UTF-8') as f:
         output=f.read()
     
-    return float(re.search('Win Rate : ([\d\.]+)%',output).group(1))
+    rezult=re.search('Win Rate : [\d\.]+% \((\d+)/(\d+) D=\d+\([\d\.]+%\)\)',output)
+    return (int(rezult.group(1)),int(rezult.group(2)))
 
 def vb(pool):
     '''对pool内的PC两两之间进行vb算点，返回key为(pc_ATK,pc_DEF)，value为胜率的字典'''
@@ -287,13 +288,20 @@ def vb(pool):
     return dt
 
 def sum_win_rate(dt,pool,pc):
-    '''计算pc对pool中相应对手的胜率和，返回胜率和'''
+    '''计算pc对pool中相应对手的胜率和，返回平均胜率'''
+    try:
+        win_rate=sum(map(lambda e:dt[(pc,e)][0],pool['ALL']))/sum(map(lambda e:dt[(pc,e)][1],pool['ALL']))
+    except:
+        win_rate=0.5
+    return win_rate
+    '''
     if(pc.mode=='ATK'):
-        return sum(map(lambda e:dt[(pc,e)],pool['DEF']+pool['MIX']))
+        return sum(map(lambda e:dt[(pc,e)],pool['DEF']+pool['MIX']))/sum(map(lambda e:dt[(pc,e)],pool['DEF']+pool['MIX']))
     elif(pc.mode=='DEF'):
         return sum(map(lambda e:(100-dt[(e,pc)]),pool['ATK']+pool['MIX']))
     elif(pc.mode=='MIX'):
         return sum(map(lambda e:dt[(pc,e)],pool['DEF']+pool['MIX']))+sum(map(lambda e:(100-dt[(e,pc)]),pool['ATK']+pool['MIX']))
+        '''
 
 def iterate_group(group):
     '''对当前group和所有role进行apc算点，返回最高胜率的PC'''
